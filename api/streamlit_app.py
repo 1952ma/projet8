@@ -10,6 +10,7 @@ import os
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
+import shap
 
 # Charger le modèle et les données
 def load_model_and_data():
@@ -59,6 +60,18 @@ def display_gauge(probability, threshold=0.53):
     plt.title("Risque de défaut de crédit (en probabilité)")
     st.pyplot(fig)
 
+def get_shap_graph(api_url, client_id):
+    try:
+        response = requests.post(f"{api_url}/shap", json={"SK_ID_CURR": client_id})
+        response.raise_for_status()
+        shap_data = response.json()
+        return shap_data["shap_graph"]
+    except requests.exceptions.RequestException as e:
+        st.error(f"Erreur de connexion à l'API : {e}")
+        return None
+
+
+
 # Charger les données et le modèle
 model, new_clients_df, description_feature_df = load_model_and_data()
 API_URL = "http://127.0.0.1:8000"
@@ -100,22 +113,13 @@ if menu == 'Prédiction':
 # Option : Feature Importance Locale
 elif menu == 'Feature Importance Locale':
     st.header("Feature Importance Locale")
-    prediction_data = get_prediction(API_URL, selected_client_id)
-    if prediction_data:
-        feature_importances = prediction_data["feature_importances"]
-        top_features = pd.DataFrame({
-            'Feature': new_clients_df.drop(columns=["SK_ID_CURR"]).columns,
-            'Importance': feature_importances
-        }).sort_values(by='Importance', ascending=False).head(10)
+    shap_graph = get_shap_graph(API_URL, selected_client_id)
+    if shap_graph:
+        st.subheader(f"Graphique SHAP pour le Client {selected_client_id}")
+        st.image(f"data:image/png;base64,{shap_graph}")
 
-        # Graphique
-        plt.figure(figsize=(10, 6))
-        plt.barh(top_features['Feature'], top_features['Importance'])
-        plt.xlabel('Importance')
-        plt.ylabel('Feature')
-        plt.title(f'Importance des Features pour le Client {selected_client_id}')
-        plt.gca().invert_yaxis()
-        st.pyplot(plt)
+
+
 
 # Option : Visualisation Features
 elif menu == 'Visualisation Features':
