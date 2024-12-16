@@ -8,10 +8,13 @@ import streamlit as st
 import requests
 import pandas as pd
 import os
+import joblib
+import matplotlib.pyplot as plt
 
-# Chargement des données des nouveaux clients (CSV)
 
 current_directory = os.path.dirname(os.path.realpath(__file__))
+
+# Chargement des données des nouveaux clients (CSV)
 new_clients_df = pd.read_csv(os.path.join(current_directory, 'df_nouveaux_clients.csv'))
 
 # Charger les données des nouveaux clients depuis FastAPI
@@ -51,46 +54,45 @@ if st.button("Réaliser une prédiction"):
             prediction_label = prediction_data["prediction_label"]
 
             # Afficher la probabilité
-            st.success(f"La probabilité de défaut pour ce client est de: {probability:.2%}")
+            #st.success(f"La probabilité de défaut pour ce client est de: {probability:.2%}")
 
             # Afficher l'évaluation du risque
             if prediction_label == 1:
-                st.markdown("<span style='color:red;'>Attention : Ce client est susceptible de <b>faire défaut</b> sur son crédit (Classe = 1)</span>", unsafe_allow_html=True)
+                st.markdown("<span style='color:red;'>Attention : ce client est susceptible de <b>faire défaut</b> sur son crédit.</span>", unsafe_allow_html=True)
             else:
-                st.markdown("<span style='color:green;'>Ce client est susceptible de <b>rembourser</b> son crédit (Classe = 0)</span>", unsafe_allow_html=True)
+                st.markdown("<span style='color:green;'>ce client est susceptible de <b>rembourser</b> son crédit. </span>", unsafe_allow_html=True)
 
-            # Fonctionnalité de jauge colorée du score
-            st.subheader("Score détaillé avec jauge colorée")
-            color = 'green' if prediction_data['probability'] < 0.53 else 'red'
-            st.markdown(f'<div style="width: 100%; height: 30px; background: linear-gradient(to right, green, red);"></div>', unsafe_allow_html=True)
+            # Fonctionnalité de jauge colorée du score 
+            st.subheader("Score détaillé avec jauge colorée") 
+            
+            progress_color = 'green' if probability < 0.53 else 'red' 
+            st.markdown( 
+                f'<div style="width: 100%; height: 30px; background-color: {progress_color}; text-align: center; color: white;">' 
+                f'{"<b>Faible</b> risque" if progress_color == "green" else "<b>Haut</b> risque"}: la probabilité de défaut pour ce client : {probability:.2%}</div>', 
+                unsafe_allow_html=True
+            )
 
-            # Fonctionnalité pour Feature Importance locale
-            st.subheader("Feature Importance Locale")
-            local_feature_importance = {}  # Charger les importances locales depuis FastAPI ou calculer localement
-            st.bar_chart(local_feature_importance)
+            # Visualiser l'importance des features pour ce client
+            feature_importances = prediction_data["feature_importances"]
+            df_columns = new_clients_df.drop(columns=["SK_ID_CURR"]).columns
 
-            # Sélection de deux Features pour visualisation
-            st.subheader("Distribution des Features Sélectionnés")
-            features = new_clients_df.columns.drop('SK_ID_CURR').tolist()
-            feature1 = st.selectbox("Sélectionner la première feature", features)
-            feature2 = st.selectbox("Sélectionner la deuxième feature", features)
+            top_features = pd.DataFrame({
+                'Feature': df_columns,
+                'Importance': feature_importances
+            }).sort_values(by='Importance', ascending=False).head(10)
 
-            # Analyse bi-variée entre les deux features sélectionnés
-            st.subheader("Analyse Bi-Variée entre deux Features")
-            feature1_values = new_clients_df[feature1]
-            feature2_values = new_clients_df[feature2]
-            st.write(f"Visualisation du dégradé selon {feature1} et {feature2}")
-            # Afficher un graphique bi-varié avec un dégradé de couleur
-
-            # Feature Importance Globale
-            st.subheader("Feature Importance Globale")
-            global_feature_importance = {}  # Charger les importances globales depuis FastAPI ou calculer localement
-            st.bar_chart(global_feature_importance)
-
+            plt.figure(figsize=(10, 6))
+            plt.barh(top_features['Feature'], top_features['Importance'])
+            plt.xlabel('Importance')
+            plt.ylabel('Feature')
+            plt.title(f'Importances des Features pour le Client {selected_client_id}')
+            plt.gca().invert_yaxis()
+            st.pyplot(plt)
     except requests.exceptions.RequestException as e:
         st.error(f"Erreur de connexion à l'API : {e}")
     except ValueError as e:
         st.error("Erreur lors de l'analyse de la réponse JSON.")
+
 
 
 

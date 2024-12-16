@@ -63,15 +63,17 @@ def predict(client_data: ClientData):
         prediction_proba = float(model.predict_proba(client_features)[:, 1][0])
         prediction_label = int(prediction_proba > 0.53)
 
+        # Calculer l'importance des features pour ce client
+        feature_importances = model.feature_importances_
+
         return {
             "SK_ID_CURR": int(client_id),
             "probability": prediction_proba,
-            "prediction_label": prediction_label
+            "prediction_label": prediction_label,
+            "feature_importances": feature_importances.tolist()  # Convertir en liste pour JSON
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
 
 
 
