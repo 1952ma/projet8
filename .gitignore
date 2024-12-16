@@ -1,2 +1,4 @@
 venv/
 api/df_nouveaux_clients.csv
+api/test.ipynb
+api/definition_features.csv

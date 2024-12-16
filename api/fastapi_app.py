@@ -10,15 +10,14 @@
 
 #2 -puis  http://127.0.0.1:8000/clients
 
-from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import pandas as pd
 import joblib
 import os
 
 # Charger le modèle LightGBM
-current_directory = os.path.dirname(os.path.realpath(__file__)) 
+current_directory = os.path.dirname(os.path.realpath(__file__))
 model = joblib.load(os.path.join(current_directory, "model.joblib"))
 
 # Création de l'application FastAPI
@@ -34,15 +33,15 @@ new_clients_df = pd.read_csv(os.path.join(current_directory, 'df_nouveaux_client
 # Route de redirection de '/' vers '/clients'
 @app.get("/")
 def read_root():
-    return RedirectResponse(url="/clients")
+    return {"message": "Bienvenue sur l'application de prédiction de crédit."}
 
-# La route (url: http://127.0.0.1:8000/clients) pour la liste des id clients: SK_ID_CURR
+# Route pour la liste des clients : http://127.0.0.1:8000/clients
 @app.get("/clients")
 def get_clients():
     """Retourner la liste des SK_ID_CURR"""
     return new_clients_df['SK_ID_CURR'].tolist()
 
-# La route (http://127.0.0.1:8000/predict) pour faire une prédiction pour un client spécifique
+# Route pour prédire un client spécifique : http://127.0.0.1:8000/predict
 @app.post("/predict")
 def predict(client_data: ClientData):
     """Faire une prédiction pour un client spécifique"""
@@ -55,19 +54,40 @@ def predict(client_data: ClientData):
 
         # Vérification si les données du client existent
         if client_row.empty:
-            return {"error": "Client not found"}
+            raise HTTPException(status_code=404, detail="Client not found")
 
         # Préparer les données pour le modèle (supprimer SK_ID_CURR)
         client_features = client_row.drop(columns=["SK_ID_CURR"]).values
         
         # Effectuer la prédiction
-        prediction_proba = float(model.predict_proba(client_features)[:, 1][0])  # Convertir en float natif
-        prediction_label = int(prediction_proba > 0.53)  # Convertir en int natif
-        
+        prediction_proba = float(model.predict_proba(client_features)[:, 1][0])
+        prediction_label = int(prediction_proba > 0.53)
+
         return {
-            "SK_ID_CURR": int(client_id),  # Convertir en int natif
+            "SK_ID_CURR": int(client_id),
             "probability": prediction_proba,
             "prediction_label": prediction_label
         }
     except Exception as e:
-        return {"error": f"Internal Server Error: {str(e)}"}
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
