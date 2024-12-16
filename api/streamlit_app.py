@@ -61,17 +61,32 @@ if st.button("Réaliser une prédiction"):
                 st.markdown("<span style='color:red;'>Attention : ce client est susceptible de <b>faire défaut</b> sur son crédit.</span>", unsafe_allow_html=True)
             else:
                 st.markdown("<span style='color:green;'>ce client est susceptible de <b>rembourser</b> son crédit. </span>", unsafe_allow_html=True)
-
-            # Fonctionnalité de jauge colorée du score 
-            st.subheader("Score détaillé avec jauge colorée") 
             
-            progress_color = 'green' if probability < 0.53 else 'red' 
-            st.markdown( 
-                f'<div style="width: 100%; height: 30px; background-color: {progress_color}; text-align: center; color: white;">' 
-                f'{"<b>Faible</b> risque" if progress_color == "green" else "<b>Haut</b> risque"}: la probabilité de défaut pour ce client : {probability:.2%}</div>', 
+            # Définir le seuil pour changer la couleur 
+            threshold = 0.53 
+            score_color = 'green' if probability < threshold else 'red' 
+            
+            # Fonctionnalité de jauge colorée du score avec un curseur
+            st.subheader("Score détaillé avec jauge colorée")
+
+            # Définir le seuil pour changer la couleur
+            threshold = 0.53
+            score_color = 'green' if probability < threshold else 'red'
+
+            # Afficher la barre de progression
+            st.markdown(
+                f"<div style='position: relative; width: 100%; height: 30px; background: linear-gradient(to right, green {threshold*100}%, red {threshold*100}%);'></div>",
                 unsafe_allow_html=True
             )
-
+            
+            # Saut de ligne entre les jauges
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            st.markdown(
+                f"<div style='position: relative; width: {probability*100}%; height: 30px; background-color: {score_color}; text-align: center; color: white;'>"
+                f"{'<b>Faible</b> risque' if score_color == 'green' else '<b>Haut</b> risque'}: la probabilité de défaut pour ce client : {probability:.2%}</div>", 
+                unsafe_allow_html=True
+            )
             # Visualiser l'importance des features pour ce client
             feature_importances = prediction_data["feature_importances"]
             df_columns = new_clients_df.drop(columns=["SK_ID_CURR"]).columns
