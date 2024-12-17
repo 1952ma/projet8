@@ -54,16 +54,29 @@ st.markdown(
     "Elle inclut des outils interactifs d'analyse, de visualisation et d'explicabilité."
 )
 
-# --- Jauge de référence ---
+# --- Jauge de référence --- 
 st.header("Jauge de référence globale")
-threshold = 0.53
-st.markdown(
-    f"<div style='position: relative; width: 100%; height: 30px; background: linear-gradient(to right, green {threshold*100}%, red {threshold*100}%);'></div>",
-    unsafe_allow_html=True
-)
+threshold = 0.53  # Seuil à 53%
+
+# Construction de la jauge avec marqueurs
+fig, ax = plt.subplots(figsize=(8, 1))
+ax.barh(0, threshold, color='green', alpha=0.9, label="Faible risque")
+ax.barh(0, 1 - threshold, left=threshold, color='red', alpha=0.9, label="Haut risque")
+ax.barh(0, threshold, color='green', alpha=0.9)
+
+# Ajout des marqueurs à 0%, 53%, et 100%
+ax.barh(0, 1, color='none', edgecolor='black')
+ax.set_xlim(0, 1)
+ax.set_xticks([0, threshold, 1])
+ax.set_xticklabels(['0%', f'{threshold*100:.0f}%', '100%'])
+ax.set_yticks([])
+ax.legend(loc='upper left', fontsize=10)
+plt.title("Risque de défaut de crédit (en probabilité)")
+
+st.pyplot(fig)
+
 
 # --- Sélection de l'ID client ---
-st.subheader("Sélectionnez un ID client")
 client_ids = get_client_ids(API_URL)
 selected_client_id = st.selectbox("Liste des clients :", client_ids)
 
@@ -72,40 +85,75 @@ prediction_data = None
 if "prediction_data" not in st.session_state:
     st.session_state.prediction_data = None
 
-if st.button("Réaliser une prédiction"):
+if st.button("Annalyse"):
     st.session_state.prediction_data = get_prediction(API_URL, selected_client_id)
 
 
 
-# Affichage permanent de la jauge client
+# Affichage permanent de la jauge client avec une taille agrandie
 if st.session_state.prediction_data:
     probability = st.session_state.prediction_data["probability"]
+    threshold = 0.53  # Seuil défini à 53%
     score_color = 'green' if probability < threshold else 'red'
     
-    st.subheader(f"Résultat pour le client : {selected_client_id}")
-    st.markdown(
-        f"<div style='position: relative; width: {probability*100}%; height: 30px; background-color: {score_color}; text-align: center; color: white;'>"
-        f"{'<b>Faible</b> risque' if score_color == 'green' else '<b>Haut</b> risque'} : {probability:.2%}</div>",
-        unsafe_allow_html=True
-    )
+    # Construction de la jauge agrandie
+    fig, ax = plt.subplots(figsize=(8, 1))
+    ax.barh(0, probability, color=score_color, alpha=0.9)
+    ax.set_xlim(0, 1)
+    ax.set_xticks([0, threshold, 1])
+    ax.set_xticklabels(['0%', f'{threshold*100:.0f}%', '100%'])
+    ax.set_yticks([])
+    ax.set_title(f"Le client : {selected_client_id} => Risque de défaut de crédit = {probability:.2%}")
+    
+    st.pyplot(fig)
+
+
 
 # --- Menu latéral ---
 menu = st.sidebar.radio(
     "Menu",
-    ['Selectionner :','Feature Importance Locale', 'Visualisation Features', 'Description Features', 'Feature Importance Globale']
+    ['Selectionner :', 'Feature Importance Locale', 'Description Features', 'Feature Importance Globale', 'Visualisation Features']
 )
+
 if menu == 'Selectionner :':
     st.header("")
+
 # --- Feature Importance Locale ---
 elif menu == 'Feature Importance Locale':
     st.header("Feature Importance Locale")
-    
     shap_waterfall = get_shap_graph(selected_client_id)
-
-    # Afficher le Waterfall Plot
     waterfall_image = Image.open(BytesIO(base64.b64decode(shap_waterfall)))
     st.image(waterfall_image, caption="Graphique SHAP - Waterfall Plot", use_column_width=True)
 
+elif menu == 'Description Features':
+    st.header("Feature Importance Locale")
+    shap_waterfall = get_shap_graph(selected_client_id)
+    waterfall_image = Image.open(BytesIO(base64.b64decode(shap_waterfall)))
+    st.image(waterfall_image, caption="Graphique SHAP - Waterfall Plot", use_column_width=True)
+
+    st.header("Description des caractéristiques")
+    st.dataframe(description_feature_df)
+
+elif menu == 'Feature Importance Globale':
+    st.header("Feature Importance Locale")
+    shap_waterfall = get_shap_graph(selected_client_id)
+    waterfall_image = Image.open(BytesIO(base64.b64decode(shap_waterfall)))
+    st.image(waterfall_image, caption="Graphique SHAP - Waterfall Plot", use_column_width=True)
+    
+    st.header("Feature Importance Globale")
+    global_feature_importances = model.feature_importances_
+    global_importance_df = pd.DataFrame({
+        'Feature': new_clients_df.drop(columns=["SK_ID_CURR"]).columns,
+        'Importance': global_feature_importances
+    }).sort_values(by='Importance', ascending=False).head(10)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.barh(global_importance_df['Feature'], global_importance_df['Importance'])
+    ax.set_xlabel('Importance')
+    ax.set_ylabel('Feature')
+    ax.set_title("Feature Importance Globale")
+    ax.invert_yaxis()
+    st.pyplot(fig)
 
 elif menu == 'Visualisation Features':
     st.header("Visualisation des caractéristiques")
@@ -123,24 +171,11 @@ elif menu == 'Visualisation Features':
             color='red', linestyle='--'
         )
         st.pyplot(fig)
-elif menu == 'Description Features':
-    st.header("Description des caractéristiques")
-    st.dataframe(description_feature_df)
-elif menu == 'Feature Importance Globale':
-    st.header("Feature Importance Globale")
-    global_feature_importances = model.feature_importances_
-    global_importance_df = pd.DataFrame({
-        'Feature': new_clients_df.drop(columns=["SK_ID_CURR"]).columns,
-        'Importance': global_feature_importances
-    }).sort_values(by='Importance', ascending=False).head(20)
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.barh(global_importance_df['Feature'], global_importance_df['Importance'])
-    ax.set_xlabel('Importance')
-    ax.set_ylabel('Feature')
-    ax.set_title("Feature Importance Globale")
-    ax.invert_yaxis()
-    st.pyplot(fig)
+
+
+
+
 
 
 
