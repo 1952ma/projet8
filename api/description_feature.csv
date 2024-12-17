@@ -1,4 +1,4 @@
-Feature,Description
+Feature, Description
 EXT_SOURCE_2 , Source externe 2 : Représente une mesure issue d'une source externe utilisée pour évaluer la solvabilité du client. Souvent ce type de feature est basé sur des données financières ou socio,démographiques.
 EXT_SOURCE_1 , Source externe 1 : Similarité avec EXT_SOURCE_2 cette feature est une mesure provenant d'une autre source externe. Elle aide à quantifier la capacité du client à rembourser.
 EXT_SOURCE_3 , Source externe 3 : Une autre mesure issue d'une troisième source externe servant d'indicateur supplémentaire pour la solvabilité.
