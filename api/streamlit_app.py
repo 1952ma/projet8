@@ -13,6 +13,7 @@ import seaborn as sns
 import base64  # Importation nécessaire pour décoder l'image
 from io import BytesIO 
 from PIL import Image
+import plotly.express as px 
 
 # Chargement du modèle et des données locales
 def load_model_and_data():
@@ -167,13 +168,32 @@ elif menu == 'Feature Importance Globale':
     ax.invert_yaxis()
     st.pyplot(fig)
 
+    st.header("Description des caractéristiques")
+    st.dataframe(description_feature_df)
+
 elif menu == 'Visualiser la distribution des features':
     st.header("Visualisation des caractéristiques")
 
-    # Sélection des features
+    # Sélection des 50 premières features mentionnées
     features = st.sidebar.multiselect(
         "Sélectionnez deux caractéristiques :",
-        new_clients_df.drop(columns=["SK_ID_CURR"]).columns
+        ['EXT_SOURCE_2', 'EXT_SOURCE_1', 'EXT_SOURCE_3', 'PAYMENT_RATE', 'DAYS_EMPLOYED',
+         'INSTAL_DPD_MEAN', 'AMT_ANNUITY', 'DAYS_BIRTH', 'INSTAL_AMT_PAYMENT_SUM', 'CODE_GENDER',
+         'INSTAL_AMT_PAYMENT_MIN', 'PREV_CNT_PAYMENT_MEAN', 'AMT_CREDIT', 'ACTIVE_DAYS_CREDIT_MAX',
+         'OWN_CAR_AGE', 'INSTAL_DAYS_ENTRY_PAYMENT_MEAN', 'APPROVED_CNT_PAYMENT_MEAN', 'AMT_GOODS_PRICE',
+         'ANNUITY_INCOME_PERC', 'NAME_EDUCATION_TYPE_Higher_education', 'POS_MONTHS_BALANCE_SIZE',
+         'INSTAL_DAYS_ENTRY_PAYMENT_MAX', 'APPROVED_AMT_DOWN_PAYMENT_MAX', 'POS_SK_DPD_DEF_MEAN',
+         'PREV_APP_CREDIT_PERC_MIN', 'DAYS_EMPLOYED_PERC', 'INSTAL_PAYMENT_PERC_MEAN',
+         'BURO_AMT_CREDIT_MAX_OVERDUE_MEAN', 'PREV_NAME_CONTRACT_STATUS_Refused_MEAN',
+         'BURO_DAYS_CREDIT_MAX', 'PREV_APP_CREDIT_PERC_MEAN', 'ACTIVE_DAYS_CREDIT_ENDDATE_MEAN',
+         'ACTIVE_AMT_CREDIT_MAX_OVERDUE_MEAN', 'BURO_CREDIT_TYPE_Microloan_MEAN',
+         'BURO_AMT_CREDIT_SUM_MAX', 'NAME_CONTRACT_TYPE_Cash_loans', 'PREV_NAME_YIELD_GROUP_high_MEAN',
+         'ACTIVE_DAYS_CREDIT_ENDDATE_MAX', 'BURO_AMT_CREDIT_SUM_DEBT_MEAN', 'CLOSED_AMT_CREDIT_SUM_SUM',
+         'INSTAL_PAYMENT_DIFF_MEAN', 'BURO_CREDIT_ACTIVE_Closed_MEAN', 'INSTAL_AMT_PAYMENT_MEAN',
+         'INSTAL_DAYS_ENTRY_PAYMENT_SUM', 'BURO_DAYS_CREDIT_MEAN', 'INSTAL_DBD_SUM',
+         'FLAG_DOCUMENT_3', 'BURO_CREDIT_TYPE_Mortgage_MEAN', 'NAME_FAMILY_STATUS_Married',
+         'REGION_RATING_CLIENT_W_CITY'],
+        help="Sélectionnez exactement deux caractéristiques"
     )
 
     # Vérification que deux caractéristiques sont sélectionnées
@@ -243,29 +263,27 @@ elif menu == 'Visualiser la distribution des features':
         ax2.legend()
         st.pyplot(fig2)
 
+
 elif menu == 'Exploration des données':
     st.header("Exploration des données")
 
-    # Sélection d'une feature pour l'histogramme
-    feature_hist = st.sidebar.selectbox(
-        "Sélectionnez une caractéristique pour l'histogramme :",
-        new_clients_df.drop(columns=["SK_ID_CURR"]).columns
-    )
+    # Liste des 20 premières features
+    top_20_features = [
+        'EXT_SOURCE_2', 'EXT_SOURCE_1', 'EXT_SOURCE_3', 'PAYMENT_RATE', 'DAYS_EMPLOYED',
+        'INSTAL_DPD_MEAN', 'AMT_ANNUITY', 'DAYS_BIRTH', 'INSTAL_AMT_PAYMENT_SUM', 'CODE_GENDER',
+        'INSTAL_AMT_PAYMENT_MIN', 'PREV_CNT_PAYMENT_MEAN', 'AMT_CREDIT', 'ACTIVE_DAYS_CREDIT_MAX',
+        'OWN_CAR_AGE', 'INSTAL_DAYS_ENTRY_PAYMENT_MEAN', 'APPROVED_CNT_PAYMENT_MEAN', 'AMT_GOODS_PRICE',
+        'ANNUITY_INCOME_PERC', 'NAME_EDUCATION_TYPE_Higher_education'
+    ]
 
-    # Histogramme interactif
-    st.subheader(f"Distribution de la caractéristique : {feature_hist}")
-    fig1, ax1 = plt.subplots(figsize=(8, 6))
-    sns.histplot(data=new_clients_df, x=feature_hist, kde=True, bins=30)
-    ax1.set_title(f"Distribution de {feature_hist}")
-    st.pyplot(fig1)
+    # Affichage de chaque graphique interactif
+    for feature in top_20_features:
+        st.subheader(f"Distribution de la caractéristique : {feature}")
+        
+        # Utilisation de st.plotly_chart pour un graphique interactif
+        fig = px.histogram(new_clients_df, x=feature, marginal="box", title=f"Distribution de {feature}")
+        st.plotly_chart(fig)
 
-    # Diagramme de corrélation
-    st.subheader("Diagramme de corrélation entre les caractéristiques")
-    corr_matrix = new_clients_df.drop(columns=["SK_ID_CURR"]).corr()
-    fig2, ax2 = plt.subplots(figsize=(10, 8))
-    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=".2f", ax=ax2)
-    ax2.set_title("Corrélation entre les caractéristiques")
-    st.pyplot(fig2)
 
 
 
