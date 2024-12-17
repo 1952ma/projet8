@@ -70,14 +70,6 @@ def generate_shap(client_id: int):
             raise HTTPException(status_code=404, detail="Client introuvable")
         
         shap_values = explainer(client_row)
-        
-        # Graphique Summary Plot
-        fig_summary = plt.figure()
-        shap.summary_plot(shap_values, client_row, show=False)
-        buf_summary = io.BytesIO()
-        plt.savefig(buf_summary, format="png")
-        buf_summary.seek(0)
-        summary_encoded = base64.b64encode(buf_summary.getvalue()).decode()
 
         # Graphique Waterfall Plot
         fig_waterfall = plt.figure()
@@ -88,11 +80,11 @@ def generate_shap(client_id: int):
         waterfall_encoded = base64.b64encode(buf_waterfall.getvalue()).decode()
         
         return JSONResponse(content={
-            "shap_summary": summary_encoded,
             "shap_waterfall": waterfall_encoded
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 

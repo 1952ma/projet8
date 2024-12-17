@@ -42,7 +42,7 @@ def get_shap_graph(client_id):
     response = requests.post(f"{API_URL}/shap/{client_id}")
     response.raise_for_status()
     shap_data = response.json()
-    return shap_data["shap_summary"], shap_data["shap_waterfall"]
+    return shap_data["shap_waterfall"]
 
 # Définir les variables principales
 API_URL = "http://127.0.0.1:8000"
@@ -96,19 +96,16 @@ menu = st.sidebar.radio(
 )
 if menu == 'Selectionner :':
     st.header("")
+# --- Feature Importance Locale ---
 elif menu == 'Feature Importance Locale':
     st.header("Feature Importance Locale")
     
-    if st.button("Afficher les graphiques SHAP"):
-        shap_summary, shap_waterfall = get_shap_graph(selected_client_id)
+    shap_waterfall = get_shap_graph(selected_client_id)
 
-        # Afficher le Summary Plot
-        summary_image = Image.open(BytesIO(base64.b64decode(shap_summary)))
-        st.image(summary_image, caption="Graphique SHAP - Summary Plot", use_column_width=True)
+    # Afficher le Waterfall Plot
+    waterfall_image = Image.open(BytesIO(base64.b64decode(shap_waterfall)))
+    st.image(waterfall_image, caption="Graphique SHAP - Waterfall Plot", use_column_width=True)
 
-        # Afficher le Waterfall Plot
-        waterfall_image = Image.open(BytesIO(base64.b64decode(shap_waterfall)))
-        st.image(waterfall_image, caption="Graphique SHAP - Waterfall Plot", use_column_width=True)
 
 elif menu == 'Visualisation Features':
     st.header("Visualisation des caractéristiques")
