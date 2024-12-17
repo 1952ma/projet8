@@ -13,14 +13,26 @@ import seaborn as sns
 import base64  # Importation nécessaire pour décoder l'image
 from io import BytesIO 
 from PIL import Image
+
 # Chargement du modèle et des données locales
 def load_model_and_data():
     current_directory = os.path.dirname(os.path.realpath(__file__))
     model = joblib.load(os.path.join(current_directory, "model.joblib"))
     new_clients_df = pd.read_csv(os.path.join(current_directory, 'df_nouveaux_clients.csv'))
-    description_feature_df = pd.read_csv(os.path.join(current_directory, 'description_feature.csv'))
+
+    # Chargement de la description des features
+    description_feature_df = pd.read_csv(
+        os.path.join(current_directory, 'description_feature_cleaned.csv'),
+        sep=',',
+        quotechar='"',
+        skipinitialspace=True
+    )
+
+    # Nom des colonnes
     description_feature_df.columns = ['Feature', 'Description']
+
     return model, new_clients_df, description_feature_df
+
 def get_client_ids(api_url):
     try:
         response = requests.get(f"{api_url}/clients")
@@ -112,7 +124,7 @@ if st.session_state.prediction_data:
 # --- Menu latéral ---
 menu = st.sidebar.radio(
     "Menu",
-    ['Selectionner :', 'Feature Importance Locale', 'Description Features', 'Feature Importance Globale', 'Visualisation Features']
+    ['Selectionner :', 'Feature Importance Locale', 'Description Features', 'Feature Importance Globale', 'Visualiser la distribution des features', 'Exploration des données']
 )
 
 if menu == 'Selectionner :':
@@ -155,22 +167,107 @@ elif menu == 'Feature Importance Globale':
     ax.invert_yaxis()
     st.pyplot(fig)
 
-elif menu == 'Visualisation Features':
+elif menu == 'Visualiser la distribution des features':
     st.header("Visualisation des caractéristiques")
+
+    # Sélection des features
     features = st.sidebar.multiselect(
         "Sélectionnez deux caractéristiques :",
-        new_clients_df.drop(columns=["SK_ID_CURR"]).columns,
-        default=new_clients_df.drop(columns=["SK_ID_CURR"]).columns[:2]
+        new_clients_df.drop(columns=["SK_ID_CURR"]).columns
     )
+
+    # Vérification que deux caractéristiques sont sélectionnées
     if len(features) == 2:
         feature1, feature2 = features
-        fig, ax = plt.subplots(figsize=(8, 6))
-        sns.scatterplot(data=new_clients_df, x=feature1, y=feature2, alpha=0.6)
-        ax.axhline(
-            y=new_clients_df.loc[new_clients_df['SK_ID_CURR'] == selected_client_id, feature2].values[0],
-            color='red', linestyle='--'
-        )
-        st.pyplot(fig)
+
+        # Ajout des classes prédictes pour visualisation
+        if "classe_predite" not in new_clients_df.columns:
+            new_clients_df['classe_predite'] = model.predict(new_clients_df.drop(columns=["SK_ID_CURR"]))
+
+        # Définir les couleurs pour chaque classe
+        couleurs = {0: 'green', 1: 'red'}  # Classe 0 = faible risque (vert), Classe 1 = haut risque (rouge)
+
+        # Visualisation de la distribution de la première caractéristique
+        st.subheader(f"Distribution de la caractéristique : {feature1}")
+        fig1, ax1 = plt.subplots(figsize=(10, 6))
+
+        # Boucle pour personnaliser les couleurs et les labels dans la légende
+        for classe in new_clients_df['classe_predite'].unique():
+            label = f"Classe {classe} ({'Faible risque' if classe == 0 else 'Haut risque'})"
+            subset = new_clients_df[new_clients_df['classe_predite'] == classe]
+            sns.kdeplot(
+                data=subset,
+                x=feature1,
+                fill=True,
+                alpha=0.5,
+                label=label,
+                color=couleurs[classe],
+                ax=ax1
+            )
+
+        # Ajout de la valeur du client
+        client_value1 = new_clients_df.loc[new_clients_df['SK_ID_CURR'] == selected_client_id, feature1].values[0]
+        ax1.axvline(client_value1, color='blue', linestyle='--', label=f"Valeur client ({client_value1:.2f})")
+
+        # Ajustements
+        ax1.set_title(f"Distribution de {feature1} selon les classes prédictes")
+        ax1.set_xlabel(feature1)
+        ax1.legend()
+        st.pyplot(fig1)
+
+        # Visualisation de la distribution de la deuxième caractéristique
+        st.subheader(f"Distribution de la caractéristique : {feature2}")
+        fig2, ax2 = plt.subplots(figsize=(10, 6))
+
+        # Boucle pour personnaliser les couleurs et les labels dans la légende
+        for classe in new_clients_df['classe_predite'].unique():
+            label = f"Classe {classe} ({'Faible risque' if classe == 0 else 'Haut risque'})"
+            subset = new_clients_df[new_clients_df['classe_predite'] == classe]
+            sns.kdeplot(
+                data=subset,
+                x=feature2,
+                fill=True,
+                alpha=0.5,
+                label=label,
+                color=couleurs[classe],
+                ax=ax2
+            )
+
+        # Ajout de la valeur du client
+        client_value2 = new_clients_df.loc[new_clients_df['SK_ID_CURR'] == selected_client_id, feature2].values[0]
+        ax2.axvline(client_value2, color='blue', linestyle='--', label=f"Valeur client ({client_value2:.2f})")
+
+        # Ajustements
+        ax2.set_title(f"Distribution de {feature2} selon les classes prédictes")
+        ax2.set_xlabel(feature2)
+        ax2.legend()
+        st.pyplot(fig2)
+
+elif menu == 'Exploration des données':
+    st.header("Exploration des données")
+
+    # Sélection d'une feature pour l'histogramme
+    feature_hist = st.sidebar.selectbox(
+        "Sélectionnez une caractéristique pour l'histogramme :",
+        new_clients_df.drop(columns=["SK_ID_CURR"]).columns
+    )
+
+    # Histogramme interactif
+    st.subheader(f"Distribution de la caractéristique : {feature_hist}")
+    fig1, ax1 = plt.subplots(figsize=(8, 6))
+    sns.histplot(data=new_clients_df, x=feature_hist, kde=True, bins=30)
+    ax1.set_title(f"Distribution de {feature_hist}")
+    st.pyplot(fig1)
+
+    # Diagramme de corrélation
+    st.subheader("Diagramme de corrélation entre les caractéristiques")
+    corr_matrix = new_clients_df.drop(columns=["SK_ID_CURR"]).corr()
+    fig2, ax2 = plt.subplots(figsize=(10, 8))
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=".2f", ax=ax2)
+    ax2.set_title("Corrélation entre les caractéristiques")
+    st.pyplot(fig2)
+
+
 
 
 

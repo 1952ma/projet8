@@ -68,22 +68,26 @@ def generate_shap(client_id: int):
         client_row = new_clients_df[new_clients_df['SK_ID_CURR'] == client_id]
         if client_row.empty:
             raise HTTPException(status_code=404, detail="Client introuvable")
-        
+    
         shap_values = explainer(client_row)
-
-        # Graphique Waterfall Plot
-        fig_waterfall = plt.figure()
+        
+        # Graphique Waterfall Plot avec une taille ajustée
+        plt.figure(figsize=(30, 10))  # Ajustement de la taille
         shap.waterfall_plot(shap_values[0], show=False)
-        buf_waterfall = io.BytesIO()
-        plt.savefig(buf_waterfall, format="png")
-        buf_waterfall.seek(0)
-        waterfall_encoded = base64.b64encode(buf_waterfall.getvalue()).decode()
+        
+        # Enregistrer en format PNG
+        buf_png = io.BytesIO()
+        plt.savefig(buf_png, format="png", dpi=300)  # DPI élevé pour meilleure qualité
+        buf_png.seek(0)
+        
+        png_encoded = base64.b64encode(buf_png.getvalue()).decode()
         
         return JSONResponse(content={
-            "shap_waterfall": waterfall_encoded
+            "shap_waterfall": png_encoded
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
