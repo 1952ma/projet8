@@ -14,6 +14,7 @@ import base64  # Importation nécessaire pour décoder l'image
 from io import BytesIO 
 from PIL import Image
 import plotly.express as px 
+import shap
 
 # Chargement du modèle et des données locales
 def load_model_and_data():
@@ -50,12 +51,7 @@ def get_prediction(api_url, client_id):
     except requests.exceptions.RequestException as e:
         st.error(f"Erreur de connexion à l'API : {e}")
         return None
-# Fonction pour obtenir les graphiques SHAP
-def get_shap_graph(client_id):
-    response = requests.post(f"{API_URL}/shap/{client_id}")
-    response.raise_for_status()
-    shap_data = response.json()
-    return shap_data["shap_waterfall"]
+
 
 # Définir les variables principales
 API_URL = "http://127.0.0.1:8000"
@@ -125,7 +121,7 @@ if st.session_state.prediction_data:
 # --- Menu latéral ---
 menu = st.sidebar.radio(
     "Menu",
-    ['Selectionner :', 'Feature Importance Locale', 'Description Features', 'Feature Importance Globale', 'Visualiser la distribution des features', 'Exploration des données']
+    ['Selectionner :', 'Feature Importance Locale', 'Feature Importance Globale', 'Visualiser la distribution des features', 'Exploration des données', 'Description Features']
 )
 
 if menu == 'Selectionner :':
@@ -133,25 +129,35 @@ if menu == 'Selectionner :':
 
 # --- Feature Importance Locale ---
 elif menu == 'Feature Importance Locale':
-    st.header("Feature Importance Locale")
-    shap_waterfall = get_shap_graph(selected_client_id)
-    waterfall_image = Image.open(BytesIO(base64.b64decode(shap_waterfall)))
-    st.image(waterfall_image, caption="Graphique SHAP - Waterfall Plot", use_column_width=True)
-
-elif menu == 'Description Features':
-    st.header("Feature Importance Locale")
-    shap_waterfall = get_shap_graph(selected_client_id)
-    waterfall_image = Image.open(BytesIO(base64.b64decode(shap_waterfall)))
-    st.image(waterfall_image, caption="Graphique SHAP - Waterfall Plot", use_column_width=True)
+    if st.session_state.prediction_data:
+        st.header(f"Analyse locale pour le client : {selected_client_id}")
+        
+        # Sélectionner les données du client à partir de son ID
+        client_data = new_clients_df[new_clients_df["SK_ID_CURR"] == selected_client_id]
+        
+        if client_data.empty:
+            st.error("Données du client introuvables.")
+        else:
+            # Créer un explainer SHAP pour LightGBM
+            explainer = shap.Explainer(model, new_clients_df)
+            
+            # Calculer les valeurs SHAP pour le client sélectionné
+            shap_values = explainer(client_data)
+            
+            # Afficher le graphique SHAP Waterfall pour le client
+            try:
+                fig, ax = plt.subplots(figsize=(10, 6))
+                shap.waterfall_plot(shap_values[0], show=False)
+                st.pyplot(fig)
+            except Exception as e:
+                st.error(f"Erreur lors de l'affichage du graphique SHAP : {e}")
+    else:
+        st.warning("Veuillez d'abord effectuer une analyse pour un client spécifique.")
 
     st.header("Description des caractéristiques")
     st.dataframe(description_feature_df)
 
 elif menu == 'Feature Importance Globale':
-    st.header("Feature Importance Locale")
-    shap_waterfall = get_shap_graph(selected_client_id)
-    waterfall_image = Image.open(BytesIO(base64.b64decode(shap_waterfall)))
-    st.image(waterfall_image, caption="Graphique SHAP - Waterfall Plot", use_column_width=True)
     
     st.header("Feature Importance Globale")
     global_feature_importances = model.feature_importances_
@@ -167,6 +173,34 @@ elif menu == 'Feature Importance Globale':
     ax.set_title("Feature Importance Globale")
     ax.invert_yaxis()
     st.pyplot(fig)
+
+    st.header("Description des caractéristiques")
+    st.dataframe(description_feature_df)
+
+    if st.session_state.prediction_data:
+        st.header(f"Analyse locale pour le client : {selected_client_id}")
+        
+        # Sélectionner les données du client à partir de son ID
+        client_data = new_clients_df[new_clients_df["SK_ID_CURR"] == selected_client_id]
+        
+        if client_data.empty:
+            st.error("Données du client introuvables.")
+        else:
+            # Créer un explainer SHAP pour LightGBM
+            explainer = shap.Explainer(model, new_clients_df)
+            
+            # Calculer les valeurs SHAP pour le client sélectionné
+            shap_values = explainer(client_data)
+            
+            # Afficher le graphique SHAP Waterfall pour le client
+            try:
+                fig, ax = plt.subplots(figsize=(10, 6))
+                shap.waterfall_plot(shap_values[0], show=False)
+                st.pyplot(fig)
+            except Exception as e:
+                st.error(f"Erreur lors de l'affichage du graphique SHAP : {e}")
+    else:
+        st.warning("Veuillez d'abord effectuer une analyse pour un client spécifique.")
 
     st.header("Description des caractéristiques")
     st.dataframe(description_feature_df)
@@ -284,7 +318,9 @@ elif menu == 'Exploration des données':
         fig = px.histogram(new_clients_df, x=feature, marginal="box", title=f"Distribution de {feature}")
         st.plotly_chart(fig)
 
-
+elif menu == 'Description Features':
+    st.header("Description des caractéristiques")
+    st.dataframe(description_feature_df)
 
 
 

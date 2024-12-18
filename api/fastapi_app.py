@@ -62,31 +62,7 @@ def predict(client_data: ClientData):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/shap/{client_id}")
-def generate_shap(client_id: int):
-    try:
-        client_row = new_clients_df[new_clients_df['SK_ID_CURR'] == client_id]
-        if client_row.empty:
-            raise HTTPException(status_code=404, detail="Client introuvable")
-    
-        shap_values = explainer(client_row)
-        
-        # Graphique Waterfall Plot avec une taille ajustée
-        plt.figure(figsize=(30, 10))  # Ajustement de la taille
-        shap.waterfall_plot(shap_values[0], show=False)
-        
-        # Enregistrer en format PNG
-        buf_png = io.BytesIO()
-        plt.savefig(buf_png, format="png", dpi=300)  # DPI élevé pour meilleure qualité
-        buf_png.seek(0)
-        
-        png_encoded = base64.b64encode(buf_png.getvalue()).decode()
-        
-        return JSONResponse(content={
-            "shap_waterfall": png_encoded
-        })
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
