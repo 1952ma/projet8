@@ -1,25 +1,10 @@
-
-# fastapi_app.py avec le framework FastAPI qui s'éxécute avec le serveur Uvicorn 
-
-#1- sur le termile1:
-# cd api puis   uvicorn fastapi_app:app --reload 
-
-#fastapi_app c'est mon fichier sans l'extension .py
-#app fait référence à l'instance de FastAPI que j'ai créée
-#--reload permet au serveur de redémarrer automatiquement lorsque je modifie le code
-
-#2 -puis  http://127.0.0.1:8000/clients
+# uvicorn fastapi_app:app --reload 
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import pandas as pd
 import joblib
 import os
-import base64
-import io
-import matplotlib.pyplot as plt
-import seaborn as sns
-from fastapi.responses import JSONResponse
 import shap
 
 current_directory = os.path.dirname(os.path.realpath(__file__))
