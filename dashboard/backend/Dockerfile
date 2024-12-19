@@ -5,16 +5,16 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
 
 # Définit le répertoire de travail
-WORKDIR /app
+WORKDIR /backend
 
-# Copie le fichier des dépendances
-COPY requirements.txt /app/requirements.txt
+# Copie le fichier des dépendances du backend
+COPY backend/requirements.txt /requirements.txt
 
-# Installe les dépendances Python
-RUN pip install --no-cache-dir -r requirements.txt
+# Installe les dépendances du backend
+RUN pip install --no-cache-dir -r /requirements.txt
 
-# Copie les autres fichiers dans le conteneur
-COPY . /app
+# Copie le reste des fichiers du backend
+COPY backend/ .
 
 # Expose le port sur lequel FastAPI écoutera
 EXPOSE 8000

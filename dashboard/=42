@@ -1,0 +1,6 @@
+Requirement already satisfied: setuptools in c:\users\hp\appdata\local\programs\python\python312\lib\site-packages (75.3.0)
+Collecting wheel
+  Downloading wheel-0.45.1-py3-none-any.whl.metadata (2.3 kB)
+Downloading wheel-0.45.1-py3-none-any.whl (72 kB)
+Installing collected packages: wheel
+Successfully installed wheel-0.45.1

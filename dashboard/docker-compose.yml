@@ -1,7 +1,7 @@
 services:
   api:
     build:
-      context: ./backend
+      context: ./backend  # Dossier backend contenant Dockerfile
     container_name: fastapi_service
     ports:
       - "8000:8000"
@@ -9,7 +9,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend  # Dossier frontend contenant Dockerfile
     container_name: streamlit_service
     ports:
       - "8501:8501"
