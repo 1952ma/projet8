@@ -84,7 +84,7 @@ prediction_data = None
 if "prediction_data" not in st.session_state:
     st.session_state.prediction_data = None
 
-if st.button("Annalyser"):
+if st.button("Analyser"):
     st.session_state.prediction_data = get_prediction(API_URL, selected_client_id)
 
 
@@ -116,14 +116,14 @@ if st.session_state.prediction_data:
 # --- Menu latéral ---
 menu = st.sidebar.radio(
     "Menu",
-    ['Selectionner :', 'Feature Importance Locale', 'Feature Importance Globale', 'Visualiser la distribution des Features', 'Exploration des données', 'Description Features']
+    ['Sélectionner :', 'Importance Locale des Caractéristiques', 'Importance Globale des Caractéristiques', 'Distributions univariées et bivariées', 'Exploration des données', 'Description des caractéristiques']
 )
 
-if menu == 'Selectionner :':
+if menu == 'Sélectionner :':
     st.header("")
 
 # --- Feature Importance Locale ---
-elif menu == 'Feature Importance Locale':
+elif menu == 'Importance Locale des Caractéristiques':
     if st.session_state.prediction_data:
         st.header(f"Feature Importance Locale pour le client : {selected_client_id}")
         
@@ -152,7 +152,7 @@ elif menu == 'Feature Importance Locale':
     st.header("Description des caractéristiques")
     st.dataframe(description_feature_df)
 
-elif menu == 'Feature Importance Globale':
+elif menu == 'Importance Globale des Caractéristiques':
     
     st.header("Feature Importance Globale")
     global_feature_importances = model.feature_importances_
@@ -197,10 +197,8 @@ elif menu == 'Feature Importance Globale':
     else:
         st.warning("Veuillez d'abord effectuer une analyse pour un client spécifique.")
 
-    st.header("Description des caractéristiques")
-    st.dataframe(description_feature_df)
 
-elif menu == 'Visualiser la distribution des Features':
+elif menu == 'Distributions univariées et bivariées':
     st.header("Visualisation des caractéristiques")
 
     # Sélection des  features 
@@ -380,7 +378,7 @@ elif menu == 'Exploration des données':
         fig = px.histogram(new_clients_df, x=feature, marginal="box", title=f"Distribution de {feature}")
         st.plotly_chart(fig)
 
-elif menu == 'Description Features':
+elif menu == 'Description des caractéristiques':
     st.header("Description des caractéristiques")
     st.dataframe(description_feature_df)
 

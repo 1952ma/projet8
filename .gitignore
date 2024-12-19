@@ -3,3 +3,4 @@ venv/
 api/test.ipynb
 api/definition_features.csv
 ex.csv
+dash/
