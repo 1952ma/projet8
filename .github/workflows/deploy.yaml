@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]         # Déclenche le workflow sur les push vers la branche main
     paths:
-      - 'mep/**'               # Se déclenche uniquement si des fichiers dans le dossier mep sont modifiés
+      - 'app/**'               # Se déclenche uniquement si des fichiers dans le dossier mep sont modifiés
 
 jobs:
   deploy:
@@ -29,10 +29,10 @@ jobs:
         USERNAME: ec2-user                               # Utilisateur correct (vérifiez si c'est bien ec2-user)
       run: |
         ssh -i ~/.ssh/github-action $USERNAME@$HOST '
-          cd ~/mep                           # Accède au dossier de l'application
+          cd ~/app                           # Accède au dossier de l'application
           git pull                           # Met à jour le code depuis GitHub
           docker compose down                # Arrête les conteneurs existants
-          docker compose up -d               # Redémarre les conteneurs en mode détaché
+          docker compose up                  # Redémarre les conteneurs 
         '
 
 

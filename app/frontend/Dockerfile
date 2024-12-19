@@ -2,20 +2,23 @@
 FROM python:3.12-slim
 
 # Définit le répertoire de travail
-WORKDIR /frontend
+WORKDIR /app
 
-# Copie le fichier des dépendances du frontend
-COPY frontend/requirements.txt /requirements.txt
+# Copie le fichier des dépendances
+COPY requirements.txt app/requirements.txt
 
-# Installe les dépendances du frontend
-RUN pip install --no-cache-dir -r /requirements.txt
+# Installe les dépendances
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copie le reste des fichiers du frontend
-COPY frontend/ .
+# Copie le reste des fichiers dans le conteneur
+COPY . /app
 
 # Expose le port sur lequel Streamlit écoutera
 EXPOSE 8501
 
 # Commande pour démarrer l'application Streamlit
 CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+
+
+
 
