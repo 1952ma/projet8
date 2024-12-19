@@ -1,0 +1,20 @@
+services:
+  api:
+    build:
+      context: ./backend
+    container_name: fastapi_service
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: streamlit_service
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    environment:
+      - API_URL=http://api:8000  # Adresse de l'API pour la communication interne dans le réseau Docker
+    restart: unless-stopped
