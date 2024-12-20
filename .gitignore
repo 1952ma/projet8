@@ -7,5 +7,7 @@ dash/
 df_stratified.csv
 
 efficientNet_modele/
+efficientNet.pdf
+efficientnet.h5
 
 
