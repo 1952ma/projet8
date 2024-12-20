@@ -5,13 +5,13 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Copie le fichier des dépendances
-COPY requirements.txt app/requirements.txt
+COPY frontend/requirements.txt app/requirements.txt
 
 # Installe les dépendances
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copie le reste des fichiers dans le conteneur
-COPY . /app
+COPY frontend/ /app
 
 # Expose le port sur lequel Streamlit écoutera
 EXPOSE 8501

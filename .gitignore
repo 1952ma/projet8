@@ -1,6 +1,7 @@
 venv/
 
-api/test.ipynb
+tiny-imagenet-200
 api/definition_features.csv
 ex.csv
 dash/
+df_stratified.csv
