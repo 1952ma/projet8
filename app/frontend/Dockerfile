@@ -1,17 +1,18 @@
-# Utilise une image Python légère
-FROM python:3.12-slim
+# Utiliser une image de base
+FROM node:16-alpine
 
-# Définit le répertoire de travail
-WORKDIR /app
+# Définir le répertoire de travail
+WORKDIR /app/frontend
 
-# Copie le fichier des dépendances
-COPY frontend/requirements.txt app/requirements.txt
+# Copier les fichiers nécessaires
+COPY frontend/package.json /app/frontend/package.json
+COPY frontend/package-lock.json /app/frontend/package-lock.json
 
-# Installe les dépendances
-RUN pip install --no-cache-dir -r /app/requirements.txt
+# Installer les dépendances
+RUN npm install
 
-# Copie le reste des fichiers dans le conteneur
-COPY frontend/ /app
+# Copier le reste des fichiers
+COPY frontend/ /app/frontend/
 
 # Expose le port sur lequel Streamlit écoutera
 EXPOSE 8501
