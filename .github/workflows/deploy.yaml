@@ -20,7 +20,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}  # La clé privée SSH, à ajouter comme secret dans votre dépôt GitHub
           source: "."  # Tous les fichiers du projet
-          target: "/home/ubuntu/projet8"  # Répertoire cible sur l'EC2
+          target: "/home/ubuntu/projet7"  # Répertoire cible sur l'EC2
 
       - name: Execute Remote Commands
         uses: appleboy/ssh-action@master  # Utilise l'action pour exécuter des commandes SSH
