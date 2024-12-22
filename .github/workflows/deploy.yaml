@@ -29,8 +29,12 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd projet8  # Naviguer vers le projet
+            cd /home/ubuntu/projet8  # Naviguer vers le projet
             git pull origin main  # Mettre à jour avec la dernière version du dépôt
-
+            source myenv/bin/activate  # Activer l'environnement virtuel
+            pip install -r requirements.txt  # Installer les dépendances
+            cd api  # Accéder au sous-dossier api
+            nohup uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload &  # Relancer l'application FastAPI en arrière-plan
+            nohup streamlit run streamlit_app.py &  # Relancer l'application Streamlit en arrière-plan
 
 
