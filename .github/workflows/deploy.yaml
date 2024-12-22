@@ -41,10 +41,12 @@ jobs:
             cd /home/ubuntu/projet8
             git pull origin main
             source myenv/bin/activate
+            pip install -r requirements.txt
+            pip install streamlit fastapi uvicorn
+
             cd api
             nohup uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload &
             nohup streamlit run streamlit_app.py --server.port 8501 &
-
 
 
 

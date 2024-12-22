@@ -6,3 +6,7 @@
 
 ttp://0.0.0.0:8000 (Press CTRL+C to quit)
 INFO:     Started reloader process [3508] using StatReload
+INFO:     Started server process [7548]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:59439 - "GET /clients HTTP/1.1" 200 OK
