@@ -3,42 +3,46 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main  # Changez la branche si nécessaire
+      - main
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest  # Utilise un runner GitHub Actions basé sur Ubuntu
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4  # Récupère votre code source
+        uses: actions/checkout@v4
 
       - name: Deploy to EC2
-        uses: appleboy/scp-action@master  # Utilise l'action pour copier des fichiers via SCP
+        uses: appleboy/scp-action@master
         with:
-          host: ec2-18-234-236-155.compute-1.amazonaws.com  # Remplacez par l'adresse de votre instance EC2
+          host: ec2-18-234-236-155.compute-1.amazonaws.com  # Adresse IP publique correcte
           username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}  # La clé privée SSH, à ajouter comme secret dans votre dépôt GitHub
-          source: "."  # Tous les fichiers du projet
-          target: "/home/ubuntu/projet8"  # Répertoire cible sur l'EC2
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "."
+          target: "/home/ubuntu/projet8"
 
       - name: Execute Remote Commands
-        uses: appleboy/ssh-action@master  # Utilise l'action pour exécuter des commandes SSH
+        uses: appleboy/ssh-action@master
         with:
-          host: ec2-18-234-236-155.compute-1.amazonaws.com
+          host: ec2-18-234-236-155.compute-1.amazonaws.com  # Adresse IP publique correcte
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo fuser -k 8000/tcp  # Libère le port 8000
-            sudo fuser -k 8501/tcp  # Libère le port 8501
-            cd /home/ubuntu/projet8  # Naviguer vers le projet
-            git pull origin main  # Mettre à jour avec la dernière version du dépôt
-            source myenv/bin/activate  # Activer l'environnement virtuel
-            pip install -r requirements.txt  # Installer les dépendances
-            pip install streamlit  # Assure-toi que Streamlit est installé
-            cd api  # Accéder au sous-dossier api
-            nohup uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload &  # Relance FastAPI en arrière-plan
-            nohup streamlit run streamlit_app.py --server.port 8501 &  # Relance Streamlit en arrière-plan
+            sudo fuser -k 8000/tcp
+            sudo fuser -k 8501/tcp
+            sudo apt update
+            sudo apt upgrade -y  # Met à jour tous les paquets
+            sudo apt install -y python3-setuptools
+            cd /home/ubuntu/projet8
+            git pull origin main
+            source myenv/bin/activate
+            pip install -r requirements.txt
+            pip install streamlit fastapi uvicorn
+            cd api
+            nohup uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload &
+            nohup streamlit run streamlit_app.py --server.port 8501 &
+
 
 
 
