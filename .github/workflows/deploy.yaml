@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4  # Récupère votre code source
+        uses: actions/checkout@v4  # Récupère le code source
 
       - name: Deploy to EC2
         uses: appleboy/scp-action@master  # Utilise l'action pour copier des fichiers via SCP
