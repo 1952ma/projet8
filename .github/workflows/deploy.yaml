@@ -2,44 +2,41 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [ main ]         # Déclenche le workflow sur les push vers la branche main
+    branches: [ main ]
     #paths:
      # - 'api/**'               # Se déclenche uniquement si des fichiers dans le dossier api sont modifiés
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest     # Utilise une machine virtuelle Ubuntu GitHub Runner
+    runs-on: ubuntu-latest
     
     steps:
-    # Étape 1 : Vérifier le dépôt
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    # Étape 2 : Configurer SSH
     - name: Configure SSH
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
       run: |
         mkdir -p ~/.ssh/
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/github-action
-        chmod 600 ~/.ssh/github-action
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/github-action.pem
+        chmod 600 ~/.ssh/github-action.pem
         echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
 
-    # Étape 3 : Se connecter et déployer sur l'instance EC2
     - name: Deploy to EC2
       env:
-        HOST: ec2-50-17-32-22.compute-1.amazonaws.com # Adresse IP publique de l'instance EC2
-        USERNAME: ubuntu                             # Utilisateur correct (vérifiez si c'est bien ubuntu)
+        HOST: ec2-50-17-32-22.compute-1.amazonaws.com 
+        USERNAME: ubuntu
       run: |
-        ssh -i ~/.ssh/github-action $USERNAME@$HOST << 'EOF'
-          cd ~/projet8                           # Accède au dossier de l'application
-          git pull                           # Met à jour le code depuis GitHub
-          source myenv/bin/activate          # Active l'environnement virtuel
-          pip install -r requirements.txt    # Installe les dépendances
-          cd api                             # Accède au sous-dossier api
-          nohup uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload &  # Relance l'application FastAPI
-          nohup streamlit run streamlit_app.py &  # Relance l'application Streamlit
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/github-action.pem $USERNAME@$HOST << 'EOF'
+          cd ~/projet8                   # Accède au dossier du projet
+          git pull                       # Met à jour le code depuis GitHub
+          source myenv/bin/activate      # Active l'environnement virtuel
+          pip install -r requirements.txt  # Installe les dépendances
+          cd api                         # Accède au sous-dossier api
+          nohup uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload &  # Relance l'application FastAPI en arrière-plan
+          nohup streamlit run streamlit_app.py &  # Relance l'application Streamlit en arrière-plan
           exit
         EOF
 
