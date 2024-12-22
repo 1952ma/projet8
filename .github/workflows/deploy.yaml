@@ -29,7 +29,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/projet8  # Naviguer vers le projet
+            cd projet8  # Naviguer vers le projet
             git pull origin main  # Mettre à jour avec la dernière version du dépôt
 
 
