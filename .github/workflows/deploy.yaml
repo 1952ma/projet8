@@ -25,7 +25,7 @@ jobs:
     # Étape 2 : Se connecter et déployer sur l'instance EC2
     - name: Deploy to EC2
       env:
-        HOST: ec2-52-73-233-113.compute-1.amazonaws.com # Adresse IP publique de l'instance EC2
+        HOST: ec2-50-17-32-22.compute-1.amazonaws.com # Adresse IP publique de l'instance EC2
         USERNAME: ec2-user                               # Utilisateur correct (vérifiez si c'est bien ec2-user)
       run: |
         ssh -i ~/.ssh/github-action $USERNAME@$HOST '
